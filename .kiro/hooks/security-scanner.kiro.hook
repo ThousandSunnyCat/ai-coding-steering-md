@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "security-scanner",
+  "description": "检查代码中是否包含 API 密钥或其他敏感信息",
+  "version": "1",
+  "when": {
+    "type": "fileSaved",
+    "filePattern": "**/*"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "作为安全专家，扫描刚保存的文件内容，检测以下类型的敏感信息：\n\n## 1. 硬编码认证信息检测\n\n**高风险模式匹配：**\n- API 密钥：`sk-`, `pk_`, `AKIA`, `AIza`, `ya29.`, `1//`\n- AWS 密钥：`AKIA[0-9A-Z]{16}`, `[0-9a-zA-Z/+=]{40}`\n- Google API：`AIza[0-9A-Za-z\\\\-_]{35}`\n- OpenAI：`sk-[a-zA-Z0-9]{48}`\n- GitHub Token：`ghp_[a-zA-Z0-9]{36}`, `gho_[a-zA-Z0-9]{36}`\n- 数据库连接：`mongodb://`, `mysql://`, `postgres://` 包含用户名密码\n- JWT Token：`eyJ[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*\\.[a-zA-Z0-9_-]*`\n\n**检测逻辑：**\n- 扫描字符串字面量、变量赋值、配置文件\n- 排除注释中的示例代码\n- 排除已知的测试/示例密钥\n\n## 2. 发现敏感信息时的处理流程\n\n**立即响应：**\n- 🚨 **高亮显示** 包含问题的具体代码行\n- 📋 **分类说明** 检测到的敏感信息类型和风险等级\n- 🔧 **提供修复建议**：\n  ```bash\n  # 将敏感信息移至环境变量\n  # 原代码：const apiKey = \"sk-1234567890abcdef\"\n  # 修复后：const apiKey = process.env.OPENAI_API_KEY\n  ```\n\n**环境变量化建议：**\n- 生成对应的 `.env` 文件示例\n- 检查 `.gitignore` 是否包含 `.env*` 规则\n- 如未包含，自动建议添加忽略规则\n\n## 3. 输出格式要求\n\n**发现问题时输出：**\n```\n🔒 安全扫描报告 - 发现 X 个潜在风险\n\n📁 文件：path/to/file.js\n📍 第 15 行：const apiKey = \"sk-...\"\n🏷️  类型：OpenAI API 密钥\n⚠️  风险：高 - 可能导致 API 滥用和费用损失\n\n🔧 修复建议：\n1. 将密钥移至 .env 文件\n2. 使用 process.env.OPENAI_API_KEY 引用\n3. 确保 .env 已添加到 .gitignore\n```\n\n**无问题时输出：**\n```\n✅ 安全扫描通过 - 未发现敏感信息\n```\n\n请立即扫描刚保存的文件并按照上述要求进行安全检查。"
+  }
+}

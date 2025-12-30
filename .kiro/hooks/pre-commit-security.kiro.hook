@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "pre-commit-security",
+  "description": "Git 提交前的安全检查，防止敏感信息被提交到版本库",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "作为 Git 提交前的最后一道安全防线，执行全面的敏感信息检查：\n\n## 1. Git 暂存区扫描\n\n**执行命令检查：**\n```bash\ngit diff --cached --name-only  # 获取暂存文件列表\ngit diff --cached              # 获取具体变更内容\n```\n\n**扫描策略：**\n- 只检查即将提交的变更内容（+ 开头的行）\n- 重点关注新增的字符串和配置\n- 对比上次提交，识别新引入的敏感信息\n\n## 2. 高风险模式检测\n\n**API 密钥模式：**\n```regex\n# OpenAI\nsk-[a-zA-Z0-9]{48}\n\n# AWS\nAKIA[0-9A-Z]{16}\n[0-9a-zA-Z/+=]{40}\n\n# Google\nAIza[0-9A-Za-z\\-_]{35}\n\n# GitHub\nghp_[a-zA-Z0-9]{36}\ngho_[a-zA-Z0-9]{36}\nghs_[a-zA-Z0-9]{36}\n\n# 通用模式\n['\"](sk|pk|api|key|token|secret)[-_]?[a-zA-Z0-9]{20,}['\"]  \n```\n\n## 3. 数据库连接检查\n\n**连接字符串模式：**\n```regex\n# MongoDB\nmongodb://[^:]+:[^@]+@\n\n# MySQL/PostgreSQL\n(mysql|postgres|postgresql)://[^:]+:[^@]+@\n\n# Redis\nredis://[^:]*:[^@]*@\n```\n\n## 4. 发现问题时的处理\n\n**立即阻止提交：**\n```\n🚨 提交被阻止！发现敏感信息\n\n📁 文件：src/config/database.js\n📍 第 3 行：+ const dbUrl = \"mongodb://admin:password123@localhost\"\n🏷️  类型：数据库连接字符串\n⚠️  风险：极高 - 数据库凭据泄露\n\n🔧 立即修复：\n1. git reset HEAD src/config/database.js\n2. 将连接字符串移至环境变量\n3. 重新暂存并提交\n\n💡 建议的环境变量配置：\n# .env\nDATABASE_URL=mongodb://admin:password123@localhost\n\n# 代码中使用\nconst dbUrl = process.env.DATABASE_URL\n```\n\n## 5. .gitignore 检查\n\n**自动验证：**\n- 检查 `.gitignore` 是否存在\n- 验证是否包含常见的敏感文件模式：\n  ```\n  .env\n  .env.*\n  *.key\n  *.pem\n  config/secrets.json\n  ```\n\n**缺失时自动建议：**\n```\n📝 建议更新 .gitignore：\n\n# 环境变量文件\n.env\n.env.local\n.env.*.local\n\n# 密钥文件\n*.key\n*.pem\n*.p12\n\n# 配置文件\nconfig/secrets.json\nconfig/local.json\n```\n\n## 6. 输出格式\n\n**通过检查：**\n```\n✅ 安全检查通过\n📊 扫描了 X 个文件，Y 行变更\n🔒 未发现敏感信息，可以安全提交\n```\n\n**发现问题：**\n```\n❌ 安全检查失败\n🚨 发现 X 个高风险项，Y 个中风险项\n📋 详细报告如上\n\n⚠️  建议：修复所有问题后再次运行检查\n```\n\n请立即执行 Git 提交前安全检查。"
+  }
+}

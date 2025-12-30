@@ -1,0 +1,14 @@
+{
+  "enabled": true,
+  "name": "env-file-validator",
+  "description": "验证环境变量文件的安全性和完整性",
+  "version": "1",
+  "when": {
+    "type": "fileSaved",
+    "filePattern": ".env*"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "专门针对环境变量文件的安全验证，确保敏感信息的正确管理：\n\n## 1. 环境文件安全检查\n\n**文件类型识别：**\n- `.env` - 主环境文件\n- `.env.local` - 本地开发环境\n- `.env.development` - 开发环境\n- `.env.production` - 生产环境\n- `.env.test` - 测试环境\n- `.env.example` - 示例模板\n\n## 2. 内容安全验证\n\n**敏感信息检查：**\n```bash\n# 检查是否包含真实的敏感值\nAPI_KEY=sk-1234567890abcdef  # ❌ 真实密钥\nAPI_KEY=your_api_key_here    # ✅ 占位符\nAPI_KEY=${API_KEY}           # ✅ 引用其他变量\n```\n\n**格式验证：**\n- 键名使用大写和下划线：`DATABASE_URL` ✅\n- 避免空格：`API_KEY = value` ❌ → `API_KEY=value` ✅\n- 引号使用：包含特殊字符时使用双引号\n\n## 3. 不同环境文件的处理策略\n\n**生产环境文件 (.env.production)：**\n```\n⚠️  生产环境配置检测到！\n\n🔍 额外检查项：\n- 是否包含 DEBUG=true（应为 false）\n- 是否使用了开发环境的服务地址\n- 密钥强度是否足够（长度、复杂度）\n\n🚨 严重警告：\n生产环境配置不应提交到版本库！\n建议使用部署平台的环境变量管理功能。\n```\n\n**示例文件 (.env.example)：**\n```\n✅ 示例文件验证\n\n🔍 检查项：\n- 所有敏感值是否已替换为占位符\n- 是否包含必要的配置项说明\n- 格式是否规范\n\n💡 建议的占位符格式：\nAPI_KEY=your_openai_api_key_here\nDATABASE_URL=postgresql://username:password@localhost:5432/dbname\n```\n\n## 4. 缺失配置检查\n\n**常见必需配置项：**\n```bash\n# 数据库\nDATABASE_URL=\n\n# API 密钥\nOPENAI_API_KEY=\nGOOGLE_API_KEY=\n\n# 应用配置\nNODE_ENV=\nPORT=\n\n# 安全配置\nJWT_SECRET=\nENCRYPTION_KEY=\n```\n\n## 5. .gitignore 同步检查\n\n**自动验证：**\n```bash\n# 检查当前环境文件是否在 .gitignore 中\nif [ -f .env ] && ! grep -q \"^\\.env$\" .gitignore; then\n  echo \"⚠️  .env 文件未添加到 .gitignore\"\nfi\n```\n\n**建议的 .gitignore 规则：**\n```\n# 环境变量文件\n.env\n.env.local\n.env.*.local\n\n# 但保留示例文件\n!.env.example\n!.env.template\n```\n\n## 6. 密钥强度验证\n\n**强度检查规则：**\n```javascript\n// API 密钥长度检查\nif (value.length < 32) {\n  warn(\"密钥长度可能不足，建议至少 32 字符\");\n}\n\n// 密码复杂度检查\nif (!/[A-Z]/.test(value) || !/[a-z]/.test(value) || !/[0-9]/.test(value)) {\n  warn(\"密码复杂度不足，建议包含大小写字母和数字\");\n}\n```\n\n## 7. 输出格式\n\n**安全通过：**\n```\n✅ 环境文件验证通过\n📁 文件：.env.development\n🔍 检查了 15 个配置项\n🔒 未发现安全问题\n```\n\n**发现问题：**\n```\n⚠️  环境文件安全警告\n📁 文件：.env\n\n🚨 高风险问题：\n- 第 3 行：API_KEY 包含真实密钥值\n- 第 7 行：DATABASE_URL 包含明文密码\n\n💡 中风险问题：\n- 第 12 行：JWT_SECRET 强度不足（少于 32 字符）\n\n🔧 修复建议：\n1. 将真实密钥移至部署环境\n2. 使用更强的随机密钥\n3. 确保文件已添加到 .gitignore\n```\n\n请立即验证刚保存的环境变量文件。"
+  }
+}
